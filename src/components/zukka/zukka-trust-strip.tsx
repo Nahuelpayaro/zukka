@@ -9,7 +9,6 @@ const TRUST_ITEMS = [
   "100% originales",
   "Envíos a todo el país",
   "Pagá como quieras en el checkout",
-  "Elegidas una por una",
 ] as const;
 
 /** Single row of claims separated by diamond glyphs */

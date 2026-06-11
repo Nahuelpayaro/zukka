@@ -5,7 +5,7 @@
  */
 
 export const HERO = {
-  h1: "Prendas importadas originales, elegidas una por una.",
+  h1: "Prendas importadas originales.",
   sub: "Seleccionamos cada prenda y la enviamos a todo el país.",
   primaryCta: "Ver la colección",
   secondaryCta: "Consultanos",
