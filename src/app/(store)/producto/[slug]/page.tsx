@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { ProductBuyPanel } from "@/components/zukka/product-buy-panel";
 import { ZukkaFooter } from "@/components/zukka/zukka-footer";
 import { ZukkaNavbar } from "@/components/zukka/zukka-navbar";
+import { ZukkaTrustStrip } from "@/components/zukka/zukka-trust-strip";
+import { ZukkaWhatsAppButton } from "@/components/zukka/zukka-whatsapp-button";
 import { getProductBySlug } from "@/lib/tiendanube";
 import type { Product } from "@/types/product";
 
@@ -116,6 +118,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
               config={{ installmentsCount }}
             />
 
+            {/* WhatsApp secondary contact — visible, config-gated interactive state */}
+            <ZukkaWhatsAppButton productName={product.name} />
+
             <Link
               href="/coleccion"
               className="inline-flex items-center justify-center rounded-full border border-white/14 px-6 py-3 text-sm font-medium text-white/82 transition hover:border-white/28 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
@@ -125,6 +130,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         </section>
       </main>
+      <ZukkaTrustStrip />
       <ZukkaFooter />
     </div>
   );

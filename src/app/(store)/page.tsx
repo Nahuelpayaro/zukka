@@ -2,6 +2,7 @@ import { ZukkaFeaturedCollection } from "@/components/zukka/zukka-featured-colle
 import { ZukkaFooter } from "@/components/zukka/zukka-footer";
 import { ZukkaHero } from "@/components/zukka/zukka-hero";
 import { ZukkaNavbar } from "@/components/zukka/zukka-navbar";
+import { ZukkaTrustStrip } from "@/components/zukka/zukka-trust-strip";
 import { getFeaturedProducts } from "@/lib/tiendanube";
 
 export default async function StorefrontPage() {
@@ -12,6 +13,7 @@ export default async function StorefrontPage() {
       <ZukkaNavbar />
       <main>
         <ZukkaHero />
+        <ZukkaTrustStrip />
         <ZukkaFeaturedCollection products={products} />
       </main>
       <ZukkaFooter />
