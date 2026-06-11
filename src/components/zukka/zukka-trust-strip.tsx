@@ -11,17 +11,24 @@ const TRUST_ITEMS = [
   "Pagá como quieras en el checkout",
 ] as const;
 
-/** Single row of claims separated by diamond glyphs */
-function ClaimRow() {
+/* Repeats per half-track: each half must exceed any viewport width so the
+ * -50% -> 0 loop never exposes a gap. 3 claims x 4 reps ~= 4000px. */
+const REPS_PER_GROUP = 4;
+
+/** Group of claims repeated enough times to cover the widest viewport */
+function ClaimGroup() {
   return (
-    <>
-      {TRUST_ITEMS.map((label) => (
-        <span key={label} className="flex shrink-0 items-center gap-6">
-          <span className="text-[0.72rem] uppercase tracking-[0.22em] text-white/72">{label}</span>
-          <span className="text-[0.62rem] text-[#b40f1d]" aria-hidden="true">◆</span>
-        </span>
-      ))}
-    </>
+    // pr-6 mirrors the internal gap so the A->B seam equals one exact period
+    <span className="flex shrink-0 items-center gap-6 pr-6">
+      {Array.from({ length: REPS_PER_GROUP }).flatMap((_, rep) =>
+        TRUST_ITEMS.map((label) => (
+          <span key={`${rep}-${label}`} className="flex shrink-0 items-center gap-6">
+            <span className="text-[0.72rem] uppercase tracking-[0.22em] text-white/72">{label}</span>
+            <span className="text-[0.62rem] text-[#b40f1d]" aria-hidden="true">◆</span>
+          </span>
+        )),
+      )}
+    </span>
   );
 }
 
@@ -36,12 +43,12 @@ export function ZukkaTrustStrip() {
        * Animation translates from -50% → 0, so visually content scrolls rightward.
        * width: max-content keeps both copies side-by-side on one line.
        */}
-      <div className="animate-marquee flex w-max items-center gap-6">
-        {/* Primary row */}
-        <ClaimRow />
-        {/* Duplicate row — purely visual, hidden from AT */}
-        <span aria-hidden="true" className="flex items-center gap-6">
-          <ClaimRow />
+      <div className="animate-marquee flex w-max items-center">
+        {/* Primary group */}
+        <ClaimGroup />
+        {/* Duplicate group — purely visual, hidden from AT */}
+        <span aria-hidden="true" className="flex items-center">
+          <ClaimGroup />
         </span>
       </div>
     </div>
