@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ZukkaFooter } from "@/components/zukka/zukka-footer";
 import { ZukkaNavbar } from "@/components/zukka/zukka-navbar";
 import { ZukkaProductCard } from "@/components/zukka/zukka-product-card";
+import { COLECCION } from "@/lib/copy";
 import { getCollectionProducts } from "@/lib/tiendanube";
 import type { Product } from "@/types/product";
 
@@ -45,12 +46,12 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
       <main className="border-b border-white/10 bg-[#050505]">
         <section className="mx-auto w-full max-w-7xl space-y-8 px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-16">
           <div className="space-y-4">
-            <p className="text-[0.68rem] uppercase tracking-[0.32em] text-white/60">Colección importada</p>
+            <p className="text-[0.68rem] uppercase tracking-[0.32em] text-white/60">{COLECCION.eyebrow}</p>
             <h1 className="max-w-4xl text-3xl font-semibold uppercase leading-[1.05] tracking-[0.08em] text-white sm:text-5xl lg:text-[3.75rem]">
-              Selección premium lista para comprar.
+              {COLECCION.h1}
             </h1>
             <p className="max-w-2xl text-sm leading-7 text-white/72 sm:text-[0.98rem]">
-              Recorré indumentaria importada por marca, tipo de prenda, uso y talle. ZUKKA muestra solo los filtros con datos reales de Tienda Nube.
+              {COLECCION.sub}
             </p>
           </div>
 
@@ -64,7 +65,7 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
                       <Link
                         key={value}
                         href={buildFilterHref(group.key, value, selectedFilters)}
-                        className={`rounded-full border px-3 py-1 text-xs transition ${
+                        className={`rounded-full border px-3 py-1 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b40f1d] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
                           selectedFilters[group.key] === value
                             ? "border-[#b40f1d]/60 bg-[#12080a] text-white"
                             : "border-white/12 bg-black/40 text-white/78 hover:border-white/24 hover:text-white"
@@ -87,13 +88,13 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
             </div>
           ) : (
             <div className="space-y-4 rounded-[1.75rem] border border-white/10 bg-[#070707] p-6 text-white/72 sm:p-8">
-              <h2 className="text-xl font-semibold text-white">No hay productos disponibles ahora.</h2>
-              <p className="text-sm leading-7">Volvé a intentar en unos minutos o consultanos por Instagram.</p>
+              <h2 className="text-xl font-semibold text-white">{COLECCION.emptyTitle}</h2>
+              <p className="text-sm leading-7">{COLECCION.emptyBody}</p>
               <Link
                 href="#footer"
-                className="inline-flex rounded-full border border-white/14 px-5 py-3 text-sm font-medium text-white transition hover:border-white/28"
+                className="inline-flex rounded-full border border-white/14 px-5 py-3 text-sm font-medium text-white transition hover:border-white/28 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b40f1d] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               >
-                Consultar disponibilidad
+                {COLECCION.emptyCta}
               </Link>
             </div>
           )}
