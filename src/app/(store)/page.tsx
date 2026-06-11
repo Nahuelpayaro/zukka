@@ -35,6 +35,7 @@ export default async function StorefrontPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       <ZukkaNavbar />
+      {/* Flow: hero → marquee band → products. No gap wrappers — sections butt flush. */}
       <main>
         <ZukkaHero />
         <ZukkaTrustStrip />
