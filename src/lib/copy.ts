@@ -14,7 +14,6 @@ export const HERO = {
 export const FEATURED_COLLECTION = {
   eyebrow: "Selección destacada",
   h2: "Prendas importadas elegidas a mano.",
-  sub: "Abrí cada producto para ver detalles, talles y comprar directamente.",
 } as const;
 
 export const COLECCION = {
@@ -30,5 +29,4 @@ export const FOOTER = {
   eyebrow: "ZUKKA",
   headline: "Originales, importadas y elegidas a mano. Envíos a todo el país.",
   sub: "Prendas importadas originales seleccionadas por la dueña. Compra directa vía checkout de Tienda Nube.",
-  microcopy: "Conectado a Tienda Nube",
 } as const;

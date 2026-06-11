@@ -46,7 +46,6 @@ export function ZukkaFooter() {
               </Link>
             ))}
           </div>
-          <p className="text-xs uppercase tracking-[0.24em] text-white/38">{FOOTER.microcopy}</p>
         </div>
       </div>
     </footer>
