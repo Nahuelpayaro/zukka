@@ -5,9 +5,8 @@
  */
 
 export const HERO = {
-  eyebrow: "Indumentaria importada original",
   h1: "Prendas importadas originales, elegidas una por una.",
-  sub: "Seleccionamos prendas importadas originales y las enviamos a todo el país. Pagás como quieras en el checkout de Tienda Nube.",
+  sub: "Seleccionamos cada prenda y la enviamos a todo el país.",
   primaryCta: "Ver la colección",
   secondaryCta: "Consultanos",
 } as const;

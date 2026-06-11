@@ -22,17 +22,16 @@ export function ZukkaHero() {
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.32)_0%,rgba(0,0,0,0.08)_44%,rgba(0,0,0,0.38)_100%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(180,15,29,0.22),transparent_30%)]" />
 
-      <div className="relative mx-auto flex min-h-[680px] w-full max-w-7xl flex-col justify-end gap-8 px-4 py-12 sm:min-h-[760px] sm:px-6 sm:py-16 lg:min-h-[82vh] lg:justify-center lg:px-8 lg:py-24">
+      <div className="relative mx-auto flex min-h-[600px] w-full max-w-7xl flex-col justify-end gap-8 px-4 py-12 sm:min-h-[680px] sm:px-6 sm:py-16 lg:min-h-[70vh] lg:justify-center lg:px-8 lg:py-20">
         <div className="max-w-5xl space-y-7">
           <div className="space-y-5">
-            <p className="text-[0.72rem] uppercase tracking-[0.34em] text-white/62">{HERO.eyebrow}</p>
             <h1
               id="storefront-heading"
-              className="max-w-4xl text-[2.35rem] font-semibold uppercase leading-[0.98] tracking-[0.06em] text-white sm:text-[3.4rem] lg:text-[4.6rem]"
+              className="max-w-4xl text-[2.35rem] font-semibold uppercase leading-[0.98] tracking-[0.06em] text-white sm:text-[3.4rem] lg:text-[3.8rem]"
             >
               {HERO.h1}
             </h1>
-            <p className="max-w-2xl text-base leading-8 text-white/82 sm:text-[1.05rem]">
+            <p className="max-w-2xl text-base leading-7 text-white/82 sm:text-[1.05rem]">
               {HERO.sub}
             </p>
           </div>
