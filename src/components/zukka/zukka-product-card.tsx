@@ -45,7 +45,7 @@ export function ZukkaProductCard({ product, priority = false, position = 1 }: Zu
     <article className="group overflow-hidden rounded-[1.25rem] border border-white/10 bg-[#060606] transition hover:border-white/22 hover:bg-[#080808]">
       <Link
         href={product.href}
-        className="block"
+        className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b40f1d] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         aria-label={`Ver ${product.name}`}
         {...(isExternal ? { rel: "noreferrer", target: "_blank" } : {})}
       >
