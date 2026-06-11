@@ -26,7 +26,7 @@ export function ZukkaProductCard({ product, priority = false, position = 1 }: Zu
 
   const isExternal = product.href.startsWith("http");
   const hasRealImage = !product.image.src.startsWith("data:image/svg+xml");
-  const categoryLabel = product.category?.trim() ? product.category.replaceAll("_", " ") : "Selección premium";
+  const categoryLabel = product.category?.trim() ? product.category.replaceAll("_", " ") : "Prenda importada";
   const availabilityLabel =
     product.availability === "out_of_stock"
       ? "Sin stock"
