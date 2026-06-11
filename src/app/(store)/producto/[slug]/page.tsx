@@ -111,6 +111,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               variants={product.variants}
               defaultVariantId={defaultVariantId}
               productCheckoutUrl={product.checkoutUrl}
+              buyActionUrl={product.buyActionUrl}
               externalUrl={product.externalUrl}
               config={{ installmentsCount }}
             />

@@ -6,10 +6,20 @@ import type { ProductVariant } from "@/types/product";
 
 const LOW_STOCK_THRESHOLD = 3;
 
+// Guard: only allow https:// URLs as hrefs to avoid javascript: and other unsafe schemes.
+function safeHttpsUrl(url: string | null | undefined): string | null {
+  if (url && /^https:\/\//.test(url)) {
+    return url;
+  }
+  return null;
+}
+
 type ProductBuyPanelProps = {
   variants: ProductVariant[];
   defaultVariantId: string;
   productCheckoutUrl?: string | null;
+  /** Fallback store-level buy URL (e.g. /comprar/) when no variant checkout URL is available. */
+  buyActionUrl?: string | null;
   externalUrl?: string | null;
   config?: {
     installmentsCount?: number | null;
@@ -20,27 +30,44 @@ export function ProductBuyPanel({
   variants,
   defaultVariantId,
   productCheckoutUrl,
+  buyActionUrl,
   externalUrl,
   config,
 }: ProductBuyPanelProps) {
   const selectableVariants = variants.filter((v) => v.hasOptions && v.name);
   const hasSelectableVariants = selectableVariants.length > 0;
 
-  const [selectedId, setSelectedId] = useState<string>(defaultVariantId);
+  // When selectable variants exist, start with nothing selected so the user
+  // must pick a size before the CTA becomes active.
+  // Auto-select only in degraded single-CTA mode (no selectable variants).
+  const [selectedId, setSelectedId] = useState<string | null>(
+    hasSelectableVariants ? null : (defaultVariantId || null),
+  );
 
-  const activeVariant = variants.find((v) => v.id === selectedId) ?? variants[0];
+  const activeVariant = selectedId !== null
+    ? (variants.find((v) => v.id === selectedId) ?? null)
+    : null;
 
-  // Fallback chain: variant.checkoutUrl -> product.checkoutUrl -> externalUrl
+  // Fallback chain: variant checkoutUrl → product-level checkoutUrl
+  // (first-available-variant URL) → store-level buyActionUrl → externalUrl.
   const activeCheckoutUrl =
-    activeVariant?.checkoutUrl ?? productCheckoutUrl ?? externalUrl ?? null;
+    safeHttpsUrl(activeVariant?.checkoutUrl) ??
+    safeHttpsUrl(productCheckoutUrl) ??
+    safeHttpsUrl(buyActionUrl) ??
+    safeHttpsUrl(externalUrl) ??
+    null;
+
+  const isUnselected = hasSelectableVariants && selectedId === null;
 
   const isOutOfStock =
-    activeVariant?.available === false ||
-    (typeof activeVariant?.stock === "number" && activeVariant.stock <= 0);
+    activeVariant !== null &&
+    (activeVariant.available === false ||
+      (typeof activeVariant.stock === "number" && activeVariant.stock <= 0));
 
   const isLowStock =
     !isOutOfStock &&
-    typeof activeVariant?.stock === "number" &&
+    activeVariant !== null &&
+    typeof activeVariant.stock === "number" &&
     activeVariant.stock > 0 &&
     activeVariant.stock <= LOW_STOCK_THRESHOLD;
 
@@ -48,6 +75,10 @@ export function ProductBuyPanel({
     config?.installmentsCount && config.installmentsCount > 0
       ? `Hasta ${config.installmentsCount} cuotas — pago en el checkout de Tienda Nube.`
       : "Pagás como quieras en el checkout de Tienda Nube.";
+
+  // Shared ghost style for disabled/no-URL states. Never red.
+  const ghostCta =
+    "cursor-not-allowed border border-white/20 bg-transparent text-white/50";
 
   return (
     <div className="space-y-4">
@@ -67,7 +98,11 @@ export function ProductBuyPanel({
                 <button
                   key={variant.id}
                   type="button"
-                  onClick={() => setSelectedId(variant.id)}
+                  onClick={() => {
+                    if (!outOfStock) {
+                      setSelectedId(variant.id);
+                    }
+                  }}
                   disabled={outOfStock}
                   aria-pressed={isSelected}
                   className={[
@@ -96,32 +131,59 @@ export function ProductBuyPanel({
       ) : null}
 
       <div className="grid gap-3">
-        {isOutOfStock ? (
-          <span
-            aria-disabled="true"
-            className="inline-flex cursor-not-allowed items-center justify-center rounded-full border border-white/20 bg-transparent px-6 py-3 text-sm font-semibold text-white/50"
+        {isUnselected ? (
+          // No size selected yet — prompt user; not navigating.
+          <button
+            type="button"
+            disabled
+            className={[
+              "inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
+              ghostCta,
+            ].join(" ")}
+          >
+            Seleccioná un talle
+          </button>
+        ) : isOutOfStock ? (
+          // Out of stock — native disabled button, correctly announced by AT.
+          <button
+            type="button"
+            disabled
+            className={[
+              "inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
+              ghostCta,
+            ].join(" ")}
           >
             Sin stock — consultá disponibilidad
-          </span>
-        ) : (
+          </button>
+        ) : activeCheckoutUrl ? (
+          // Happy path — valid https:// URL, render as <a>.
           <a
-            href={activeCheckoutUrl ?? undefined}
+            href={activeCheckoutUrl}
             target="_blank"
             rel="noreferrer"
-            aria-disabled={!activeCheckoutUrl ? "true" : undefined}
-            onClick={!activeCheckoutUrl ? (e) => e.preventDefault() : undefined}
             className={[
               "inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white transition",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
-              activeCheckoutUrl
-                ? "bg-[#b40f1d] hover:bg-[#cc1323]"
-                : "cursor-not-allowed bg-[#b40f1d]/40",
-            ]
-              .filter(Boolean)
-              .join(" ")}
+              "bg-[#b40f1d] hover:bg-[#cc1323]",
+            ].join(" ")}
           >
             Comprar
           </a>
+        ) : (
+          // No checkout URL available — disabled button, not an href-less anchor.
+          <button
+            type="button"
+            disabled
+            className={[
+              "inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
+              ghostCta,
+            ].join(" ")}
+          >
+            Comprar
+          </button>
         )}
       </div>
 

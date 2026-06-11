@@ -167,6 +167,9 @@ function mapTiendanubeProduct(input: unknown, index: number): Product | null {
   const variant = product.variants?.[0];
   const price = variants[0]?.price ?? toNumber(variant?.promotional_price) ?? toNumber(variant?.price) ?? 0;
   const availability = resolveAvailability(product, variant, price);
+  // Product-level checkoutUrl: points to the first available variant's checkout
+  // URL (not a true product-level URL). Used as a fallback when the panel has
+  // no selected variant or when variants is empty.
   const checkoutUrl = buildCheckoutUrl(externalUrl, variants.find((item) => item.available !== false)?.id ?? variants[0]?.id);
   const buyActionUrl = buildBuyActionUrl(externalUrl);
 
@@ -218,7 +221,10 @@ function mapVariants(variants: TiendanubeVariant[] | null | undefined, currency:
         checkoutUrl: buildCheckoutUrl(productUrl, id),
       } satisfies ProductVariant;
     })
-    .filter((variant) => variant.price > 0 || currency.length > 0);
+    // Drop zero-price placeholder variants (e.g. Tienda Nube draft rows with
+    // no price set). If this removes ALL variants the panel falls back to the
+    // product-level CTA chain (productCheckoutUrl → buyActionUrl → externalUrl).
+    .filter((variant) => variant.price > 0);
 }
 
 function mapImage(
