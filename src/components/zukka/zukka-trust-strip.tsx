@@ -37,10 +37,7 @@ export function ZukkaTrustStrip() {
        * Animation translates from -50% → 0, so visually content scrolls rightward.
        * width: max-content keeps both copies side-by-side on one line.
        */}
-      <div
-        className="animate-marquee flex w-max items-center gap-6"
-        style={{ animation: "marquee 28s linear infinite" }}
-      >
+      <div className="animate-marquee flex w-max items-center gap-6">
         {/* Primary row */}
         <ClaimRow />
         {/* Duplicate row — purely visual, hidden from AT */}
