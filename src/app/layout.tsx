@@ -12,10 +12,42 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+/** metadataBase required for relative OG image paths to resolve correctly in Next.js. */
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
+  : new URL("https://zukka.com.ar");
+
 export const metadata: Metadata = {
-  title: "ZUKKA — Indumentaria importada premium",
+  metadataBase: siteUrl,
+  title: {
+    default: "ZUKKA — Indumentaria importada premium",
+    template: "%s — ZUKKA",
+  },
   description:
-    "Tienda premium de indumentaria importada con marcas internacionales y una selección curada por ZUKKA.",
+    "Prendas importadas originales, elegidas una por una. Envíos a todo el país. Pagá como quieras en el checkout de Tienda Nube.",
+  openGraph: {
+    siteName: "ZUKKA",
+    locale: "es_AR",
+    type: "website",
+    title: "ZUKKA — Indumentaria importada premium",
+    description:
+      "Prendas importadas originales, elegidas una por una. Envíos a todo el país.",
+    images: [
+      {
+        url: "/images/zukka-hero-bg.jpg",
+        width: 1200,
+        height: 630,
+        alt: "ZUKKA — Indumentaria importada",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ZUKKA — Indumentaria importada premium",
+    description:
+      "Prendas importadas originales, elegidas una por una. Envíos a todo el país.",
+    images: ["/images/zukka-hero-bg.jpg"],
+  },
 };
 
 export default function RootLayout({

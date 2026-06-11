@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -10,9 +11,47 @@ import { ZukkaWhatsAppButton } from "@/components/zukka/zukka-whatsapp-button";
 import { getProductBySlug } from "@/lib/tiendanube";
 import type { Product } from "@/types/product";
 
+/** Static brand fallback used when a product has no images. */
+const BRAND_OG_IMAGE = "/images/zukka-hero-bg.jpg";
+
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
 };
+
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
+
+  if (!product) {
+    return { title: "Producto no encontrado — ZUKKA" };
+  }
+
+  const ogImage = product.images[0]?.src ?? product.image?.src ?? BRAND_OG_IMAGE;
+  const ogImageAlt = product.images[0]?.alt ?? product.image?.alt ?? `${product.name} — ZUKKA`;
+  const description =
+    product.description?.slice(0, 155) ||
+    `${product.name} — indumentaria importada original. Comprá ahora en ZUKKA con envíos a todo el país.`;
+
+  return {
+    title: `${product.name} — ZUKKA`,
+    description,
+    openGraph: {
+      title: `${product.name} — ZUKKA`,
+      description,
+      url: `/producto/${slug}`,
+      locale: "es_AR",
+      type: "website",
+      images: [
+        {
+          url: ogImage,
+          width: 800,
+          height: 1000,
+          alt: ogImageAlt,
+        },
+      ],
+    },
+  };
+}
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;

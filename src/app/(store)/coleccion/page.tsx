@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ZukkaFooter } from "@/components/zukka/zukka-footer";
@@ -5,6 +6,28 @@ import { ZukkaNavbar } from "@/components/zukka/zukka-navbar";
 import { ZukkaProductCard } from "@/components/zukka/zukka-product-card";
 import { getCollectionProducts } from "@/lib/tiendanube";
 import type { Product } from "@/types/product";
+
+export const metadata: Metadata = {
+  title: "Colección — ZUKKA",
+  description:
+    "Filtrá por marca, tipo, uso y talle. Indumentaria importada original, todo disponible para comprar.",
+  openGraph: {
+    title: "Colección — ZUKKA",
+    description:
+      "Filtrá por marca, tipo, uso y talle. Indumentaria importada original, todo disponible para comprar.",
+    url: "/coleccion",
+    locale: "es_AR",
+    type: "website",
+    images: [
+      {
+        url: "/images/zukka-hero-bg.jpg",
+        width: 1200,
+        height: 630,
+        alt: "ZUKKA — Colección de indumentaria importada",
+      },
+    ],
+  },
+};
 
 type CollectionPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
