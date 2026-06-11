@@ -31,17 +31,18 @@ export function ZukkaWhatsAppButton({ productName, className = "" }: ZukkaWhatsA
   if (!href) {
     // Non-interactive state: icon visible, no link, no wa.me, no Instagram fallback.
     return (
-      <span
-        aria-disabled="true"
+      <button
+        type="button"
+        disabled
+        aria-label="WhatsApp — próximamente disponible"
         className={[
           sharedClass,
           "cursor-not-allowed border-white/12 bg-black/20 text-white/38",
         ].join(" ")}
-        title="WhatsApp no configurado"
       >
         <WhatsAppIcon />
         <span>WhatsApp</span>
-      </span>
+      </button>
     );
   }
 

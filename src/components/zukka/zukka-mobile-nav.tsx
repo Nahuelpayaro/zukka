@@ -12,7 +12,7 @@
  */
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const navigation = [
   { label: "Colección", href: "/coleccion" },
@@ -23,26 +23,49 @@ const DRAWER_ID = "mobile-nav-drawer";
 
 export function ZukkaMobileNavTrigger() {
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
 
-  // Close on Escape key
+  function closeDrawer() {
+    setOpen(false);
+  }
+
+  // Close on Escape key, body scroll lock, focus management
   useEffect(() => {
     if (!open) return;
+
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        closeDrawer();
+      }
     };
     document.addEventListener("keydown", handler);
-    // Prevent body scroll while drawer is open
     document.body.style.overflow = "hidden";
+
+    // Move focus to first focusable element in drawer
+    const focusable = drawerRef.current?.querySelector<HTMLElement>(
+      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    );
+    focusable?.focus();
+
     return () => {
       document.removeEventListener("keydown", handler);
       document.body.style.overflow = "";
     };
   }, [open]);
 
+  // Return focus to trigger when drawer closes
+  useEffect(() => {
+    if (!open) {
+      triggerRef.current?.focus();
+    }
+  }, [open]);
+
   return (
     <>
       {/* Hamburger trigger — only visible on mobile (md:hidden handled by parent) */}
       <button
+        ref={triggerRef}
         type="button"
         aria-expanded={open}
         aria-controls={DRAWER_ID}
@@ -58,14 +81,17 @@ export function ZukkaMobileNavTrigger() {
         <div
           className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
           aria-hidden="true"
-          onClick={() => setOpen(false)}
+          onClick={closeDrawer}
         />
       ) : null}
 
       {/* Drawer */}
       <nav
+        ref={drawerRef}
         id={DRAWER_ID}
         aria-label="Menú de navegación móvil"
+        aria-hidden={!open}
+        inert={!open}
         className={[
           "fixed inset-y-0 right-0 z-50 flex w-72 flex-col gap-2 border-l border-white/10 bg-black/94 px-6 py-8 backdrop-blur-xl transition-transform duration-300",
           open ? "translate-x-0" : "translate-x-full",
@@ -75,7 +101,7 @@ export function ZukkaMobileNavTrigger() {
           <span className="text-xs uppercase tracking-[0.28em] text-white/50">Menú</span>
           <button
             type="button"
-            onClick={() => setOpen(false)}
+            onClick={closeDrawer}
             aria-label="Cerrar menú"
             className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-white/14 text-white transition hover:border-white/28 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
@@ -88,7 +114,7 @@ export function ZukkaMobileNavTrigger() {
             <li key={item.label}>
               <Link
                 href={item.href}
-                onClick={() => setOpen(false)}
+                onClick={closeDrawer}
                 className="flex min-h-[44px] items-center rounded-xl px-4 py-3 text-base font-medium text-white/82 transition hover:bg-white/6 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               >
                 {item.label}
@@ -100,7 +126,7 @@ export function ZukkaMobileNavTrigger() {
         <div className="mt-auto border-t border-white/10 pt-6">
           <Link
             href="/coleccion"
-            onClick={() => setOpen(false)}
+            onClick={closeDrawer}
             className="flex min-h-[44px] items-center justify-center rounded-full bg-[#b40f1d] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#cc1323] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
             Ver colección

@@ -8,7 +8,7 @@ import { getCollectionProducts } from "@/lib/tiendanube";
 import type { Product } from "@/types/product";
 
 export const metadata: Metadata = {
-  title: "Colección — ZUKKA",
+  title: "Colección",
   description:
     "Filtrá por marca, tipo, uso y talle. Indumentaria importada original, todo disponible para comprar.",
   openGraph: {

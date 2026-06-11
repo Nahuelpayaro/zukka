@@ -8,6 +8,7 @@ import { ZukkaFooter } from "@/components/zukka/zukka-footer";
 import { ZukkaNavbar } from "@/components/zukka/zukka-navbar";
 import { ZukkaTrustStrip } from "@/components/zukka/zukka-trust-strip";
 import { ZukkaWhatsAppButton } from "@/components/zukka/zukka-whatsapp-button";
+import { installmentsCount } from "@/lib/config";
 import { getProductBySlug } from "@/lib/tiendanube";
 import type { Product } from "@/types/product";
 
@@ -23,17 +24,18 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const product = await getProductBySlug(slug);
 
   if (!product) {
-    return { title: "Producto no encontrado — ZUKKA" };
+    return { title: { absolute: "Producto no encontrado — ZUKKA" } };
   }
 
-  const ogImage = product.images[0]?.src ?? product.image?.src ?? BRAND_OG_IMAGE;
+  const rawImage = product.images[0]?.src ?? product.image?.src;
+  const ogImage = rawImage && !rawImage.startsWith("data:") ? rawImage : BRAND_OG_IMAGE;
   const ogImageAlt = product.images[0]?.alt ?? product.image?.alt ?? `${product.name} — ZUKKA`;
   const description =
     product.description?.slice(0, 155) ||
     `${product.name} — indumentaria importada original. Comprá ahora en ZUKKA con envíos a todo el país.`;
 
   return {
-    title: `${product.name} — ZUKKA`,
+    title: product.name,
     description,
     openGraph: {
       title: `${product.name} — ZUKKA`,
@@ -70,9 +72,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const description = product.description ?? "";
   const attributeRows = buildAttributeRows(product);
   const defaultVariantId = product.variants[0]?.id ?? "";
-  const installmentsCount = process.env.NEXT_PUBLIC_CUOTAS_COUNT
-    ? Number(process.env.NEXT_PUBLIC_CUOTAS_COUNT) || undefined
-    : undefined;
+  const installmentsCountProp = installmentsCount ?? undefined;
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -154,7 +154,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               productCheckoutUrl={product.checkoutUrl}
               buyActionUrl={product.buyActionUrl}
               externalUrl={product.externalUrl}
-              config={{ installmentsCount }}
+              config={{ installmentsCount: installmentsCountProp }}
             />
 
             {/* WhatsApp secondary contact — visible, config-gated interactive state */}

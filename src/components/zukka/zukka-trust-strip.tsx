@@ -7,7 +7,7 @@
 const TRUST_ITEMS = [
   { icon: "✓", label: "100% originales" },
   { icon: "✓", label: "Envíos a todo el país" },
-  { icon: "✓", label: "Pago seguro en el checkout de Tienda Nube" },
+  { icon: "✓", label: "Pagá como quieras en el checkout" },
 ] as const;
 
 export function ZukkaTrustStrip() {

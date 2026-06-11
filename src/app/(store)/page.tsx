@@ -8,7 +8,7 @@ import { ZukkaTrustStrip } from "@/components/zukka/zukka-trust-strip";
 import { getFeaturedProducts } from "@/lib/tiendanube";
 
 export const metadata: Metadata = {
-  title: "ZUKKA — Indumentaria importada premium",
+  title: { absolute: "ZUKKA — Indumentaria importada premium" },
   description:
     "Prendas importadas originales, elegidas una por una. Envíos a todo el país. Pagá como quieras en el checkout.",
   openGraph: {
