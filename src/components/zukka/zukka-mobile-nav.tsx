@@ -25,6 +25,7 @@ export function ZukkaMobileNavTrigger() {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
+  const wasOpenRef = useRef(false);
 
   function closeDrawer() {
     setOpen(false);
@@ -54,9 +55,11 @@ export function ZukkaMobileNavTrigger() {
     };
   }, [open]);
 
-  // Return focus to trigger when drawer closes
+  // Return focus to trigger when drawer closes (skip initial mount)
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      wasOpenRef.current = true;
+    } else if (wasOpenRef.current) {
       triggerRef.current?.focus();
     }
   }, [open]);
