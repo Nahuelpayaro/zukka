@@ -72,7 +72,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const availabilityLabel = getAvailabilityLabel(product.availability);
   const isUniquePiece = product.totalStock === 1 && product.availability !== "out_of_stock";
   const description = product.description ?? "";
-  const attributeRows = buildAttributeRows(product);
   const defaultVariantId = product.variants[0]?.id ?? "";
   const installmentsCountProp = installmentsCount ?? undefined;
 
@@ -127,7 +126,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </span>
               </div>
 
-              <h1 className="text-3xl font-semibold uppercase leading-[1.03] tracking-[0.06em] text-white sm:text-5xl">
+              <h1 className="text-xl font-semibold uppercase leading-[1.15] tracking-[0.04em] text-white sm:text-2xl lg:text-3xl">
                 {product.name}
               </h1>
 
@@ -145,17 +144,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </div>
 
             {description ? <p className="text-sm leading-7 text-white/72 sm:text-base sm:leading-8">{description}</p> : null}
-
-            {attributeRows.length > 0 ? (
-              <div className="grid gap-3 rounded-[1.25rem] border border-white/10 bg-[#070707] p-4 sm:grid-cols-2">
-                {attributeRows.map((row) => (
-                  <div key={row.label} className="space-y-1 rounded-xl border border-white/10 bg-black/35 px-3 py-3">
-                    <h2 className="text-[0.62rem] uppercase tracking-[0.22em] text-white/44">{row.label}</h2>
-                    <p className="text-sm font-medium text-white/86">{row.value}</p>
-                  </div>
-                ))}
-              </div>
-            ) : null}
 
             <ProductBuyPanel
               variants={product.variants}
@@ -208,11 +196,3 @@ function getAvailabilityLabel(availability: Product["availability"]): string {
   return "Consultar stock";
 }
 
-function buildAttributeRows(product: Product): Array<{ label: string; value: string }> {
-  return [
-    { label: "Marca", value: product.attributes.brand },
-    { label: "Tipo", value: product.attributes.garmentType },
-    { label: "Uso", value: product.attributes.usage },
-    { label: "Talle", value: product.attributes.sizes.join(" / ") || null },
-  ].filter((row): row is { label: string; value: string } => Boolean(row.value));
-}

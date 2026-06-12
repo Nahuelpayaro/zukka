@@ -4,7 +4,10 @@ import { useState } from "react";
 
 import type { ProductVariant } from "@/types/product";
 
-const LOW_STOCK_THRESHOLD = 3;
+// Show urgency copy only when stock is between 2 and 5 (inclusive).
+// Stock = 1 is covered by the "Pieza única" badge on the page; never show it here.
+const LOW_STOCK_MIN = 2;
+const LOW_STOCK_MAX = 5;
 
 // Guard: only allow https:// URLs as hrefs to avoid javascript: and other unsafe schemes.
 function safeHttpsUrl(url: string | null | undefined): string | null {
@@ -68,8 +71,8 @@ export function ProductBuyPanel({
     !isOutOfStock &&
     activeVariant !== null &&
     typeof activeVariant.stock === "number" &&
-    activeVariant.stock > 0 &&
-    activeVariant.stock <= LOW_STOCK_THRESHOLD;
+    activeVariant.stock >= LOW_STOCK_MIN &&
+    activeVariant.stock <= LOW_STOCK_MAX;
 
   const paymentCopy =
     config?.installmentsCount && config.installmentsCount > 0
