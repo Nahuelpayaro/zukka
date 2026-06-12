@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ProductBuyPanel } from "@/components/zukka/product-buy-panel";
+import { ProductGallery } from "@/components/zukka/product-gallery";
 import { ZukkaFooter } from "@/components/zukka/zukka-footer";
 import { ZukkaNavbar } from "@/components/zukka/zukka-navbar";
 import { ZukkaTrustStrip } from "@/components/zukka/zukka-trust-strip";
@@ -80,40 +80,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <ZukkaNavbar />
       <main className="border-b border-white/10 bg-[#050505]">
         <section className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-8 sm:px-6 sm:py-12 lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)] lg:px-8 lg:py-16">
-          <div className="space-y-4">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#090909]">
-              <Image
-                src={product.images[0]?.src ?? product.image.src}
-                alt={product.images[0]?.alt ?? product.image.alt}
-                fill
-                sizes="(max-width: 1024px) 100vw, 58vw"
-                className="object-contain object-center p-3"
-                placeholder="blur"
-                blurDataURL={product.images[0]?.blurDataURL ?? product.image.blurDataURL}
-                priority
-                unoptimized
-              />
-            </div>
-
-            {product.images.length > 1 ? (
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-                {product.images.slice(1, 5).map((image) => (
-                  <div key={image.src} className="relative aspect-[4/5] overflow-hidden rounded-[0.9rem] border border-white/10 bg-[#090909]">
-                    <Image
-                      src={image.src}
-                      alt={image.alt}
-                      fill
-                      sizes="(max-width: 768px) 33vw, 180px"
-                      className="object-contain object-center p-2"
-                      placeholder="blur"
-                      blurDataURL={image.blurDataURL}
-                      unoptimized
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
+          <ProductGallery
+            images={product.images.length > 0 ? product.images : [product.image]}
+          />
 
           <div className="space-y-7 lg:sticky lg:top-24 lg:self-start">
             <div className="space-y-4">

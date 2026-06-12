@@ -30,6 +30,11 @@ export const PRODUCT_BADGES = {
   uniquePiece: "Pieza única",
 } as const;
 
+export const PRODUCT_META = {
+  /** Prefix for the size chip shown on product cards. */
+  sizePrefix: "Talle",
+} as const;
+
 export const FOOTER = {
   eyebrow: "ZUKKA",
   headline: "Originales, importadas y elegidas a mano. Envíos a todo el país.",

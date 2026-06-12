@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { PRODUCT_BADGES } from "@/lib/copy";
+import { PRODUCT_BADGES, PRODUCT_META } from "@/lib/copy";
 import type { Product } from "@/types/product";
 
 type ZukkaProductCardProps = {
@@ -26,6 +26,11 @@ export function ZukkaProductCard({ product, priority = false, position = 1 }: Zu
       : null;
 
   const isExternal = product.href.startsWith("http");
+  // attributes.sizes is already filtered/normalized by tiendanube.ts; render only when non-empty.
+  const sizeLabel =
+    product.attributes.sizes.length > 0
+      ? `${PRODUCT_META.sizePrefix} ${product.attributes.sizes.join(", ")}`
+      : null;
   const hasRealImage = !product.image.src.startsWith("data:image/svg+xml");
   const isUniquePiece = product.totalStock === 1 && product.availability !== "out_of_stock";
   const categoryLabel = product.category?.trim() ? product.category.replaceAll("_", " ") : "Prenda importada";
@@ -93,6 +98,9 @@ export function ZukkaProductCard({ product, priority = false, position = 1 }: Zu
             <div className="space-y-1.5">
               <p className="text-[0.76rem] leading-5 text-white/58">{product.attributes.brand ?? categoryLabel}</p>
               <h3 className="text-lg font-medium leading-6 text-white">{product.name}</h3>
+              {sizeLabel ? (
+                <p className="text-[0.68rem] uppercase tracking-[0.14em] text-white/42">{sizeLabel}</p>
+              ) : null}
             </div>
             <div className="space-y-1 text-left sm:text-right">
               <p className="text-lg font-semibold tracking-[0.01em] text-white">{priceLabel}</p>
