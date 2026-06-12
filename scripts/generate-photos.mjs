@@ -11,6 +11,7 @@
  *   node scripts/generate-photos.mjs 3 --fix-framing # re-run existing outputs through the framing fix prompt
  *   node scripts/generate-photos.mjs 3 --fix-background # re-run existing outputs through the background fix prompt
  *   node scripts/generate-photos.mjs 3 --fix="custom instruction" # re-run existing outputs through a custom fix prompt
+ *   node scripts/generate-photos.mjs 3 --fix="..." --ref=/path/to/detail.jpg # attach a reference image to the fix
  *
  * Reads:  photos/photoproducts/{n}f.* and {n}t.* (or {n}b.*)
  * Writes: photos/photomodel/{n}f.png and {n}t.png
@@ -24,7 +25,9 @@ const ROOT = new URL("..", import.meta.url).pathname;
 // Sources are searched in order: clean product shots first, raw cellphone photos as fallback
 const SOURCE_DIRS = [join(ROOT, "photos", "photoproducts"), join(ROOT, "photos", "photocelular")];
 const OUTPUT_DIR = join(ROOT, "photos", "photomodel");
-const MODEL_ID = "gemini-2.5-flash-image";
+// Default model is cheap (~$0.04/image); --pro switches to the pro image model
+// (better at rendering small text, several times the cost) for stubborn cases.
+const MODEL_ID = process.argv.includes("--pro") ? "gemini-3-pro-image-preview" : "gemini-2.5-flash-image";
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_ID}:generateContent`;
 
 const SHARED_BLOCK = `
@@ -209,7 +212,7 @@ async function processProduct(apiKey, num, persona, { force, frontOnly }) {
 }
 
 /** Re-runs already generated outputs through a fix prompt (overwrites in place) */
-async function applyFix(apiKey, num, fixPrompt, { frontOnly, backOnly }) {
+async function applyFix(apiKey, num, fixPrompt, { frontOnly, backOnly, refImage }) {
   let generated = 0;
   let failed = 0;
   const targets = [];
@@ -224,7 +227,10 @@ async function applyFix(apiKey, num, fixPrompt, { frontOnly, backOnly }) {
     const label = target.split("/").pop();
     console.log(`[${num}] applying fix to ${label}...`);
     try {
-      const img = await generateImage(apiKey, [imagePart(target), { text: fixPrompt }], label);
+      const parts = [imagePart(target)];
+      if (refImage) parts.push(imagePart(refImage));
+      parts.push({ text: fixPrompt });
+      const img = await generateImage(apiKey, parts, label);
       writeFileSync(target, img);
       console.log(`[${num}] ${label} fixed.`);
       generated++;
@@ -244,6 +250,7 @@ const persona = (flags.find((f) => f.startsWith("--model="))?.split("=")[1] ?? "
 const force = flags.includes("--force");
 const frontOnly = flags.includes("--front-only");
 const backOnly = flags.includes("--back-only");
+const refImage = flags.find((f) => f.startsWith("--ref="))?.slice("--ref=".length) ?? null;
 const customFix = flags.find((f) => f.startsWith("--fix="))?.slice("--fix=".length);
 const fixFlagsUsed = [flags.includes("--fix-framing"), flags.includes("--fix-background"), Boolean(customFix)].filter(Boolean).length;
 if (fixFlagsUsed > 1) {
@@ -274,7 +281,7 @@ let totalGenerated = 0;
 let totalFailed = 0;
 for (const num of numbers) {
   const { generated, failed } = fixPrompt
-    ? await applyFix(apiKey, num, fixPrompt, { frontOnly, backOnly })
+    ? await applyFix(apiKey, num, fixPrompt, { frontOnly, backOnly, refImage })
     : await processProduct(apiKey, num, persona, { force, frontOnly });
   totalGenerated += generated;
   totalFailed += failed;
