@@ -21,7 +21,8 @@ import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from 
 import { join, extname } from "node:path";
 
 const ROOT = new URL("..", import.meta.url).pathname;
-const PRODUCTS_DIR = join(ROOT, "photos", "photoproducts");
+// Sources are searched in order: clean product shots first, raw cellphone photos as fallback
+const SOURCE_DIRS = [join(ROOT, "photos", "photoproducts"), join(ROOT, "photos", "photocelular")];
 const OUTPUT_DIR = join(ROOT, "photos", "photomodel");
 const MODEL_ID = "gemini-2.5-flash-image";
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_ID}:generateContent`;
@@ -103,14 +104,17 @@ function imagePart(filePath) {
   return { inline_data: { mime_type: mime, data: data.toString("base64") } };
 }
 
-/** Finds {n}{suffix}.* in photoproducts, case-insensitive; back accepts t or b */
+/** Finds {n}{suffix}.* in source dirs, case-insensitive; back accepts t or b */
 function findProductPhoto(num, kind) {
   const suffixes = kind === "front" ? ["f"] : ["t", "b"];
-  const files = readdirSync(PRODUCTS_DIR);
-  for (const suffix of suffixes) {
-    const re = new RegExp(`^${num}${suffix}\\.(png|jpe?g|webp)$`, "i");
-    const hit = files.find((f) => re.test(f));
-    if (hit) return join(PRODUCTS_DIR, hit);
+  for (const dir of SOURCE_DIRS) {
+    if (!existsSync(dir)) continue;
+    const files = readdirSync(dir);
+    for (const suffix of suffixes) {
+      const re = new RegExp(`^${num}${suffix}\\.(png|jpe?g|webp)$`, "i");
+      const hit = files.find((f) => re.test(f));
+      if (hit) return join(dir, hit);
+    }
   }
   return null;
 }
