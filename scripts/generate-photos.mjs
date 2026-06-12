@@ -33,6 +33,9 @@ const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL
 const SHARED_BLOCK = `
 — GARMENT —
 Analyze the garment in the photo and reproduce it exactly on the model: preserve the exact color, fabric texture, pattern, and every detail (straps, zippers, slits, hardware, embellishments). Do not alter or invent any detail.
+Do NOT add anything that is not in the photo: no slits, no cutouts, no extra straps, no embellishments. If the garment is plain, keep it plain.
+Preserve the fabric FINISH exactly: matte stays matte, satin stays satin, sequins stay sequins, glitter shimmer stays glitter shimmer.
+Logos, brand text, zippers and hardware must be reproduced exactly as in the photo, with every letter sharp and correctly spelled.
 
 — VISUAL CONSISTENCY — apply exactly every time —
 Background: warm soft beige (#f0ece4), very subtle top-to-bottom gradient, no texture, perfectly clean
@@ -43,6 +46,7 @@ Quality: ultra-sharp, photorealistic, high resolution, ready to publish
 
 — FRAMING — non-negotiable —
 FULL BODY mandatory: entire figure visible from top of head to feet, zero cropping of any body part.
+She wears elegant neutral heels; her shoes and the floor beneath them are fully inside the frame, with visible empty floor space below the shoes. This applies regardless of garment length — for short dresses the full legs, ankles and shoes must be visible.
 The model must occupy roughly 75% of the frame height, with visible space above the head and below the feet.
 Same proportions as a standard full-length editorial e-commerce catalog shot.
 Output image ratio: 3:4 portrait (e.g. 900x1200px).
@@ -57,9 +61,14 @@ Pose: standing, one arm slightly relaxed at side, direct gaze at camera, natural
 Pose: standing, one hand resting on hip, intense gaze directly at camera, confident and elegant posture.`,
 };
 
-function frontPrompt(persona) {
-  return `Take this clothing photo and generate a professional e-commerce fashion photo of the garment worn by a model.
+/* Prepended when the source is a raw cellphone photo instead of a clean product shot */
+const CELLPHONE_SOURCE_BLOCK = `
+— SOURCE PHOTO —
+The input is a casual cellphone photo: the garment may be on a hanger, wrinkled, poorly lit, with color cast and a cluttered background. First infer the garment's TRUE color, fabric finish and construction from it, mentally correcting the bad lighting. Ignore the background, the hanger, and any reflections — only the garment matters. Render the garment as it would look freshly steamed, with no wrinkles from storage.`;
 
+function frontPrompt(persona, { cellphoneSource = false } = {}) {
+  return `Take this clothing photo and generate a professional e-commerce fashion photo of the garment worn by a model.
+${cellphoneSource ? CELLPHONE_SOURCE_BLOCK : ""}
 — MODEL —
 ${PERSONAS[persona]}
 ${SHARED_BLOCK}`;
@@ -67,15 +76,16 @@ ${SHARED_BLOCK}`;
 
 const BACK_PROMPT = `The first image is the front view of a model wearing a garment. The second image is a real photo of the back of the same garment.
 
-Generate the exact same photo as the first image but showing the back view of the garment and model, using the second image as the reference for all back details.
+Generate the exact same photo as the first image but showing the back view of the garment and model, using the second image as the only reference for all back details.
 
-Keep identical: same model, same background (#f0ece4 warm beige), same lighting, same quality, same color grade.
+Keep identical: same model, same shoes, same background (#f0ece4 warm beige), same lighting, same quality, same color grade.
 
-Only change: model turns around completely, camera shows her full back.
-Reveal all back details of the garment exactly as in the reference: zipper, open back, straps crossing, buttons, back label, or any back design.
+Only change: the model turns around completely. The camera sees her full back — the back of her head and hair are visible and her face is NOT visible at all.
+Copy the back of the garment EXACTLY from the second image: zipper (including its color and tape), open back depth, straps, buttons, back label, or any back design. Do NOT invent straps, lace-up details, cutouts or any element that is not in the second image; if its back is plain, render it plain. Remove any price tag or hang tag visible in the reference — the garment is worn, not for sale display.
 
 — FRAMING — non-negotiable —
 FULL BODY mandatory: entire figure visible from top of head to feet, zero cropping.
+Her shoes and the floor beneath them are fully inside the frame, regardless of garment length.
 The model must occupy roughly 75% of the frame height, with visible space above and below.
 Output image ratio: 3:4 portrait (e.g. 900x1200px).
 The model should fill the frame vertically with moderate side margins.
@@ -171,9 +181,10 @@ async function processProduct(apiKey, num, persona, { force, frontOnly }) {
   if (existsSync(frontOut) && !force) {
     console.log(`[${num}] front already exists — skipping (use --force to regenerate).`);
   } else {
-    console.log(`[${num}] generating front (persona: ${persona})...`);
+    const cellphoneSource = frontSrc.includes("photocelular");
+    console.log(`[${num}] generating front (persona: ${persona}${cellphoneSource ? ", cellphone source" : ""})...`);
     try {
-      const img = await generateImage(apiKey, [imagePart(frontSrc), { text: frontPrompt(persona) }], `${num}f`);
+      const img = await generateImage(apiKey, [imagePart(frontSrc), { text: frontPrompt(persona, { cellphoneSource }) }], `${num}f`);
       writeFileSync(frontOut, img);
       console.log(`[${num}] front saved -> photos/photomodel/${num}f.png`);
       generated++;
@@ -199,7 +210,10 @@ async function processProduct(apiKey, num, persona, { force, frontOnly }) {
 
   console.log(`[${num}] generating back (front result + real back photo)...`);
   try {
-    const img = await generateImage(apiKey, [imagePart(frontOut), imagePart(backSrc), { text: BACK_PROMPT }], `${num}t`);
+    const backPrompt = backSrc.includes("photocelular")
+      ? `${BACK_PROMPT}\n\nNote: the second image is a casual cellphone photo (hanger, wrinkles, bad lighting). Use it only to read the back construction and details; render the garment clean and steamed under the studio conditions of the first image.`
+      : BACK_PROMPT;
+    const img = await generateImage(apiKey, [imagePart(frontOut), imagePart(backSrc), { text: backPrompt }], `${num}t`);
     writeFileSync(backOut, img);
     console.log(`[${num}] back saved -> photos/photomodel/${num}t.png`);
     generated++;
