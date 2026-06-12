@@ -10,6 +10,7 @@
  *   node scripts/generate-photos.mjs 3 --front-only # skip back view
  *   node scripts/generate-photos.mjs 3 --fix-framing # re-run existing outputs through the framing fix prompt
  *   node scripts/generate-photos.mjs 3 --fix-background # re-run existing outputs through the background fix prompt
+ *   node scripts/generate-photos.mjs 3 --fix="custom instruction" # re-run existing outputs through a custom fix prompt
  *
  * Reads:  photos/photoproducts/{n}f.* and {n}t.* (or {n}b.*)
  * Writes: photos/photomodel/{n}f.png and {n}t.png
@@ -204,10 +205,11 @@ async function processProduct(apiKey, num, persona, { force, frontOnly }) {
 }
 
 /** Re-runs already generated outputs through a fix prompt (overwrites in place) */
-async function applyFix(apiKey, num, fixPrompt, { frontOnly }) {
+async function applyFix(apiKey, num, fixPrompt, { frontOnly, backOnly }) {
   let generated = 0;
   let failed = 0;
-  const targets = [join(OUTPUT_DIR, `${num}f.png`)];
+  const targets = [];
+  if (!backOnly) targets.push(join(OUTPUT_DIR, `${num}f.png`));
   if (!frontOnly) targets.push(join(OUTPUT_DIR, `${num}t.png`));
 
   for (const target of targets) {
@@ -237,15 +239,20 @@ const numbers = args.filter((a) => /^\d+$/.test(a)).map(Number);
 const persona = (flags.find((f) => f.startsWith("--model="))?.split("=")[1] ?? "sofia").toLowerCase();
 const force = flags.includes("--force");
 const frontOnly = flags.includes("--front-only");
-if (flags.includes("--fix-framing") && flags.includes("--fix-background")) {
-  console.error("Use only one fix flag at a time: --fix-framing or --fix-background.");
+const backOnly = flags.includes("--back-only");
+const customFix = flags.find((f) => f.startsWith("--fix="))?.slice("--fix=".length);
+const fixFlagsUsed = [flags.includes("--fix-framing"), flags.includes("--fix-background"), Boolean(customFix)].filter(Boolean).length;
+if (fixFlagsUsed > 1) {
+  console.error("Use only one fix flag at a time: --fix-framing, --fix-background, or --fix=...");
   process.exit(1);
 }
 const fixPrompt = flags.includes("--fix-framing")
   ? FIX_FRAMING_PROMPT
   : flags.includes("--fix-background")
     ? FIX_BACKGROUND_PROMPT
-    : null;
+    : customFix
+      ? `Regenerate the same photo with this fix: ${customFix}. Keep everything else identical: same model, same garment with every detail, same beige background (#f0ece4), same lighting, same framing, same 3:4 ratio.`
+      : null;
 
 if (!numbers.length) {
   console.error("Usage: node scripts/generate-photos.mjs <product numbers...> [--model=sofia|valentina|luna] [--force] [--front-only]");
@@ -263,7 +270,7 @@ let totalGenerated = 0;
 let totalFailed = 0;
 for (const num of numbers) {
   const { generated, failed } = fixPrompt
-    ? await applyFix(apiKey, num, fixPrompt, { frontOnly })
+    ? await applyFix(apiKey, num, fixPrompt, { frontOnly, backOnly })
     : await processProduct(apiKey, num, persona, { force, frontOnly });
   totalGenerated += generated;
   totalFailed += failed;
