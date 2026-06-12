@@ -73,7 +73,17 @@ const FALLBACK_PRODUCTS: Product[] = [
   }),
 ];
 
+/** Category id for the "Destacados" category in Tienda Nube. */
+const DESTACADOS_CATEGORY_ID = "39313706";
+
 export async function getFeaturedProducts(limit = 3): Promise<Product[]> {
+  // Prefer the curated "Destacados" category; fall back to first N products.
+  const categoryProducts = await fetchTiendanubeProductsByCategory(DESTACADOS_CATEGORY_ID, limit);
+
+  if (categoryProducts.length > 0) {
+    return categoryProducts;
+  }
+
   const remoteProducts = await fetchTiendanubeProducts(limit);
 
   if (remoteProducts.length > 0) {
@@ -83,14 +93,71 @@ export async function getFeaturedProducts(limit = 3): Promise<Product[]> {
   return FALLBACK_PRODUCTS.slice(0, limit);
 }
 
-export async function getCollectionProducts(): Promise<Product[]> {
-  const remoteProducts = await fetchTiendanubeProducts(48);
+export async function getCollectionProducts(categoryId?: string): Promise<Product[]> {
+  const remoteProducts = categoryId
+    ? await fetchTiendanubeProductsByCategory(categoryId, 48)
+    : await fetchTiendanubeProducts(48);
 
   if (remoteProducts.length > 0) {
     return remoteProducts;
   }
 
-  return FALLBACK_PRODUCTS;
+  return categoryId ? [] : FALLBACK_PRODUCTS;
+}
+
+export type StoreCategory = { id: string; name: string };
+
+export async function getCategories(): Promise<StoreCategory[]> {
+  const storeId = process.env.TIENDANUBE_STORE_ID;
+  const accessToken = process.env.TIENDANUBE_ACCESS_TOKEN;
+
+  if (!storeId || !accessToken) {
+    return [];
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.tiendanube.com/v1/${storeId}/categories`,
+      {
+        headers: {
+          Authentication: `bearer ${accessToken}`,
+          "Content-Type": "application/json",
+          "User-Agent": "ZUKKA Storefront (nahuelpayaro)",
+        },
+        next: { revalidate: 3600 },
+      },
+    );
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const payload = (await response.json()) as unknown;
+
+    if (!Array.isArray(payload)) {
+      return [];
+    }
+
+    return payload
+      .map((item: unknown) => {
+        if (!item || typeof item !== "object") {
+          return null;
+        }
+
+        const cat = item as { id?: unknown; name?: unknown };
+        const id = String(cat.id ?? "");
+        const name = readLocalizedValue(cat.name as TiendanubeProduct["name"]) ?? "";
+
+        if (!id || !name) {
+          return null;
+        }
+
+        return { id, name } satisfies StoreCategory;
+      })
+      .filter((cat): cat is StoreCategory => cat !== null);
+  } catch {
+    return [];
+  }
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
@@ -108,6 +175,46 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   }
 
   return FALLBACK_PRODUCTS.find((product) => product.slug === normalizedSlug) ?? null;
+}
+
+async function fetchTiendanubeProductsByCategory(categoryId: string, limit: number): Promise<Product[]> {
+  const storeId = process.env.TIENDANUBE_STORE_ID;
+  const accessToken = process.env.TIENDANUBE_ACCESS_TOKEN;
+
+  if (!storeId || !accessToken) {
+    return [];
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.tiendanube.com/v1/${storeId}/products?category_id=${encodeURIComponent(categoryId)}&per_page=${limit}&published=true`,
+      {
+        headers: {
+          Authentication: `bearer ${accessToken}`,
+          "Content-Type": "application/json",
+          "User-Agent": "ZUKKA Storefront (nahuelpayaro)",
+        },
+        next: { revalidate: 300 },
+      },
+    );
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const payload = (await response.json()) as unknown;
+
+    if (!Array.isArray(payload)) {
+      return [];
+    }
+
+    return payload
+      .map((item, index) => mapTiendanubeProduct(item, index))
+      .filter((product): product is Product => product !== null)
+      .slice(0, limit);
+  } catch {
+    return [];
+  }
 }
 
 async function fetchTiendanubeProducts(limit: number): Promise<Product[]> {
@@ -172,6 +279,9 @@ function mapTiendanubeProduct(input: unknown, index: number): Product | null {
   // no selected variant or when variants is empty.
   const checkoutUrl = buildCheckoutUrl(externalUrl, variants.find((item) => item.available !== false)?.id ?? variants[0]?.id);
   const buyActionUrl = buildBuyActionUrl(externalUrl);
+  // Sum stock from raw variants BEFORE the price filter so zero-price draft
+  // variants don't silently inflate or hide the real stock count.
+  const totalStock = computeRawTotalStock(product.variants);
 
   return {
     id,
@@ -192,6 +302,7 @@ function mapTiendanubeProduct(input: unknown, index: number): Product | null {
     variants,
     attributes,
     availability,
+    totalStock,
   };
 }
 
@@ -283,6 +394,7 @@ function createFallbackProduct({
     variants: [],
     attributes: { sizes: [] },
     availability,
+    totalStock: null,
   };
 }
 
@@ -632,6 +744,46 @@ function readCategory(category: TiendanubeCategory | null | undefined): string |
   }
 
   return category.name.es?.trim() || category.name.en?.trim() || null;
+}
+
+function computeRawTotalStock(rawVariants: TiendanubeVariant[] | null | undefined): number | null {
+  if (!rawVariants || rawVariants.length === 0) {
+    return null;
+  }
+
+  let total = 0;
+
+  for (const variant of rawVariants) {
+    const stock = toNumber(variant.stock);
+
+    if (typeof stock !== "number") {
+      // Any variant with unknown stock makes total unknown.
+      return null;
+    }
+
+    total += stock;
+  }
+
+  return total;
+}
+
+function computeTotalStock(variants: ProductVariant[]): number | null {
+  if (variants.length === 0) {
+    return null;
+  }
+
+  let total = 0;
+
+  for (const variant of variants) {
+    if (typeof variant.stock !== "number") {
+      // Any variant with unknown stock makes total unknown.
+      return null;
+    }
+
+    total += variant.stock;
+  }
+
+  return total;
 }
 
 function toNumber(value: string | number | null | undefined): number | null {

@@ -8,6 +8,13 @@ import { COLECCION } from "@/lib/copy";
 import { getCollectionProducts } from "@/lib/tiendanube";
 import type { Product } from "@/types/product";
 
+/** Known store categories. Hardcoded so the UI is deterministic without an extra API round-trip. */
+const CATEGORY_CHIPS: Array<{ id: string; label: string }> = [
+  { id: "39313707", label: "Vestidos largos" },
+  { id: "39313710", label: "Vestidos cortos" },
+  { id: "39313711", label: "Monos" },
+];
+
 export const metadata: Metadata = {
   title: "Colección",
   description:
@@ -35,8 +42,14 @@ type CollectionPageProps = {
 };
 
 export default async function CollectionPage({ searchParams }: CollectionPageProps) {
-  const selectedFilters = readSelectedFilters(await searchParams);
-  const products = await getCollectionProducts();
+  const params = await searchParams;
+  const selectedFilters = readSelectedFilters(params);
+  const rawCategoryId = readParam(params?.categoria);
+  // Validate against known category ids — unknown/garbage values behave like no filter.
+  const activeCategoryId =
+    rawCategoryId && CATEGORY_CHIPS.some((cat) => cat.id === rawCategoryId) ? rawCategoryId : undefined;
+  // Fetch filtered at the API level when a category chip is active.
+  const products = await getCollectionProducts(activeCategoryId);
   const filterGroups = buildFilterGroups(products);
   const visibleProducts = filterProducts(products, selectedFilters);
 
@@ -55,6 +68,38 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
             </p>
           </div>
 
+          {/* Category chips — server-side filter via `categoria` param; no JS needed */}
+          <nav aria-label="Filtrar por categoría" className="flex flex-wrap gap-2">
+            <Link
+              href="/coleccion"
+              aria-current={!activeCategoryId ? "page" : undefined}
+              className={`rounded-full border px-4 py-1.5 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b40f1d] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
+                !activeCategoryId
+                  ? "border-[#b40f1d]/60 bg-[#12080a] text-white"
+                  : "border-white/12 bg-black/40 text-white/78 hover:border-white/24 hover:text-white"
+              }`}
+            >
+              Todos
+            </Link>
+            {CATEGORY_CHIPS.map((cat) => {
+              const isActive = activeCategoryId === cat.id;
+              return (
+                <Link
+                  key={cat.id}
+                  href={isActive ? "/coleccion" : `/coleccion?categoria=${cat.id}`}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`rounded-full border px-4 py-1.5 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b40f1d] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
+                    isActive
+                      ? "border-[#b40f1d]/60 bg-[#12080a] text-white"
+                      : "border-white/12 bg-black/40 text-white/78 hover:border-white/24 hover:text-white"
+                  }`}
+                >
+                  {cat.label}
+                </Link>
+              );
+            })}
+          </nav>
+
           {filterGroups.length > 0 ? (
             <div className="grid gap-3 rounded-[1.5rem] border border-white/10 bg-[#070707] p-4 sm:grid-cols-2 lg:grid-cols-4">
               {filterGroups.map((group) => (
@@ -64,7 +109,7 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
                     {group.values.map((value) => (
                       <Link
                         key={value}
-                        href={buildFilterHref(group.key, value, selectedFilters)}
+                        href={buildFilterHref(group.key, value, selectedFilters, activeCategoryId)}
                         className={`rounded-full border px-3 py-1 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b40f1d] focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
                           selectedFilters[group.key] === value
                             ? "border-[#b40f1d]/60 bg-[#12080a] text-white"
@@ -147,8 +192,19 @@ function readParam(value: string | string[] | undefined): string | undefined {
   return normalized || undefined;
 }
 
-function buildFilterHref(key: FilterKey, value: string, selectedFilters: SelectedFilters): string {
+function buildFilterHref(
+  key: FilterKey,
+  value: string,
+  selectedFilters: SelectedFilters,
+  activeCategoryId?: string,
+): string {
   const params = new URLSearchParams();
+
+  // Preserve the active category chip so filter links don't reset it.
+  if (activeCategoryId) {
+    params.set("categoria", activeCategoryId);
+  }
+
   const nextFilters = { ...selectedFilters, [key]: selectedFilters[key] === value ? undefined : value };
 
   for (const [filterKey, filterValue] of Object.entries(nextFilters)) {

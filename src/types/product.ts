@@ -43,4 +43,6 @@ export type Product = {
   variants: ProductVariant[];
   attributes: ProductAttributes;
   availability: "available" | "out_of_stock" | "unknown";
+  /** Sum of stock across all variants. null means unknown. Used for "Pieza única" badge. */
+  totalStock: number | null;
 };

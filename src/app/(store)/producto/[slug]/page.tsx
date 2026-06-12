@@ -9,6 +9,7 @@ import { ZukkaNavbar } from "@/components/zukka/zukka-navbar";
 import { ZukkaTrustStrip } from "@/components/zukka/zukka-trust-strip";
 import { ZukkaWhatsAppButton } from "@/components/zukka/zukka-whatsapp-button";
 import { installmentsCount } from "@/lib/config";
+import { PRODUCT_BADGES } from "@/lib/copy";
 import { getProductBySlug } from "@/lib/tiendanube";
 import type { Product } from "@/types/product";
 
@@ -69,6 +70,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       ? formatPrice(product.compareAtPrice, product.currency)
       : null;
   const availabilityLabel = getAvailabilityLabel(product.availability);
+  const isUniquePiece = product.totalStock === 1 && product.availability !== "out_of_stock";
   const description = product.description ?? "";
   const attributeRows = buildAttributeRows(product);
   const defaultVariantId = product.variants[0]?.id ?? "";
@@ -130,7 +132,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </h1>
 
               <div className="space-y-1">
-                <p className="text-2xl font-semibold text-white sm:text-3xl">{priceLabel}</p>
+                <div className="flex flex-wrap items-baseline gap-3">
+                  <p className="text-2xl font-semibold text-white sm:text-3xl">{priceLabel}</p>
+                  {isUniquePiece ? (
+                    <span className="rounded-full border border-[#b40f1d]/40 bg-[#0e0608] px-3 py-1 text-[0.62rem] uppercase tracking-[0.18em] text-[#ff8a94]">
+                      {PRODUCT_BADGES.uniquePiece}
+                    </span>
+                  ) : null}
+                </div>
                 {compareAtLabel ? <p className="text-base text-white/42 line-through">{compareAtLabel}</p> : null}
               </div>
             </div>

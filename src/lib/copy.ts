@@ -25,6 +25,11 @@ export const COLECCION = {
   emptyCta: "Consultar disponibilidad",
 } as const;
 
+export const PRODUCT_BADGES = {
+  /** Shown when total stock across all variants equals 1. Truthful: every piece is unique. */
+  uniquePiece: "Pieza única",
+} as const;
+
 export const FOOTER = {
   eyebrow: "ZUKKA",
   headline: "Originales, importadas y elegidas a mano. Envíos a todo el país.",

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { PRODUCT_BADGES } from "@/lib/copy";
 import type { Product } from "@/types/product";
 
 type ZukkaProductCardProps = {
@@ -26,6 +27,7 @@ export function ZukkaProductCard({ product, priority = false, position = 1 }: Zu
 
   const isExternal = product.href.startsWith("http");
   const hasRealImage = !product.image.src.startsWith("data:image/svg+xml");
+  const isUniquePiece = product.totalStock === 1 && product.availability !== "out_of_stock";
   const categoryLabel = product.category?.trim() ? product.category.replaceAll("_", " ") : "Prenda importada";
   const availabilityLabel =
     product.availability === "out_of_stock"
@@ -74,9 +76,16 @@ export function ZukkaProductCard({ product, priority = false, position = 1 }: Zu
 
         <div className="space-y-4 border-t border-white/10 px-4 pb-5 pt-4 sm:px-5 sm:pb-5">
           <div className="flex items-center justify-between gap-3">
-            <span className={`rounded-full border px-3 py-1 text-[0.62rem] uppercase tracking-[0.18em] ${availabilityClassName}`}>
-              {availabilityLabel}
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`rounded-full border px-3 py-1 text-[0.62rem] uppercase tracking-[0.18em] ${availabilityClassName}`}>
+                {availabilityLabel}
+              </span>
+              {isUniquePiece ? (
+                <span className="rounded-full border border-[#b40f1d]/40 bg-[#0e0608] px-3 py-1 text-[0.62rem] uppercase tracking-[0.18em] text-[#ff8a94]">
+                  {PRODUCT_BADGES.uniquePiece}
+                </span>
+              ) : null}
+            </div>
             <span className="text-[0.62rem] uppercase tracking-[0.22em] text-white/36">{String(position).padStart(2, "0")}</span>
           </div>
 
