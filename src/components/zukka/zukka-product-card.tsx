@@ -96,10 +96,10 @@ export function ZukkaProductCard({ product, priority = false, position = 1 }: Zu
           </div>
 
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
-            <div className="space-y-1.5">
-              <p className="text-[0.76rem] leading-5 text-white/58">{product.attributes.brand ?? categoryLabel}</p>
+            <div className="min-w-0 space-y-1.5">
+              <p className="truncate text-[0.76rem] leading-5 text-white/58">{product.attributes.brand ?? categoryLabel}</p>
               {/* min-h reserves 3 title lines so short names don't shrink the card */}
-              <h3 className="line-clamp-3 min-h-[4.5rem] text-lg font-medium leading-6 text-white">{product.name}</h3>
+              <h3 className="line-clamp-3 min-h-[4.5rem] break-words text-lg font-medium leading-6 text-white">{product.name}</h3>
               {sizeLabel ? (
                 <p className="text-[0.68rem] uppercase tracking-[0.14em] text-white/42">{sizeLabel}</p>
               ) : null}

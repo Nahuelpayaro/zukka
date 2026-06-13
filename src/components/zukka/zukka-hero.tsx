@@ -39,13 +39,13 @@ export function ZukkaHero() {
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
               href="/coleccion"
-              className="inline-flex min-w-[14rem] items-center justify-center rounded-full bg-[#b40f1d] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#cc1323] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b40f1d] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="inline-flex w-full items-center justify-center rounded-full bg-[#b40f1d] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#cc1323] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b40f1d] focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-auto sm:min-w-[14rem]"
             >
               {HERO.primaryCta}
             </Link>
             <Link
               href="#footer"
-              className="inline-flex min-w-[14rem] items-center justify-center rounded-full border border-white/14 bg-transparent px-6 py-3 text-sm font-medium text-white/82 transition hover:border-white/28 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="inline-flex w-full items-center justify-center rounded-full border border-white/14 bg-transparent px-6 py-3 text-sm font-medium text-white/82 transition hover:border-white/28 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-auto sm:min-w-[14rem]"
             >
               {HERO.secondaryCta}
             </Link>

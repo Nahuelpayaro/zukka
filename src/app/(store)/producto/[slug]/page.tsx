@@ -84,7 +84,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             images={product.images.length > 0 ? product.images : [product.image]}
           />
 
-          <div className="space-y-7 lg:sticky lg:top-24 lg:self-start">
+          <div className="min-w-0 space-y-7 lg:sticky lg:top-24 lg:self-start">
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="rounded-full border border-white/12 bg-[#0c0c0c] px-3 py-1 text-[0.62rem] uppercase tracking-[0.18em] text-white/78">
@@ -95,7 +95,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </span>
               </div>
 
-              <h1 className="text-xl font-semibold uppercase leading-[1.15] tracking-[0.04em] text-white sm:text-2xl lg:text-3xl">
+              <h1 className="break-words text-xl font-semibold uppercase leading-[1.15] tracking-[0.04em] text-white sm:text-2xl lg:text-3xl">
                 {product.name}
               </h1>
 
@@ -128,7 +128,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
             <Link
               href="/coleccion"
-              className="inline-flex items-center justify-center rounded-full border border-white/14 px-6 py-3 text-sm font-medium text-white/82 transition hover:border-white/28 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="inline-flex w-full items-center justify-center rounded-full border border-white/14 px-6 py-3 text-sm font-medium text-white/82 transition hover:border-white/28 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:w-auto"
             >
               Volver a la colección
             </Link>

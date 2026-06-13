@@ -20,7 +20,7 @@ export function ZukkaFooter() {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-10 sm:px-6 lg:flex-row lg:items-end lg:justify-between lg:px-8 lg:py-14">
         <div className="space-y-4">
           <p className="text-[0.62rem] uppercase tracking-[0.36em] text-white/54">{FOOTER.eyebrow}</p>
-          <p className="max-w-lg text-2xl uppercase tracking-[0.16em] text-white sm:text-3xl">
+          <p className="max-w-lg break-words text-2xl uppercase tracking-[0.08em] text-white sm:text-3xl sm:tracking-[0.16em]">
             {FOOTER.headline}
           </p>
           <p className="max-w-xl text-sm leading-7 text-white/68">

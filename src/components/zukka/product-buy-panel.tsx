@@ -84,7 +84,7 @@ export function ProductBuyPanel({
     "cursor-not-allowed border border-white/20 bg-transparent text-white/50";
 
   return (
-    <div className="space-y-4">
+    <div className="w-full min-w-0 space-y-4">
       {hasSelectableVariants ? (
         <div className="space-y-3 rounded-[1.25rem] border border-white/10 bg-[#070707] p-4">
           <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-white/72">
@@ -140,7 +140,7 @@ export function ProductBuyPanel({
             type="button"
             disabled
             className={[
-              "inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold",
+              "inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
               ghostCta,
             ].join(" ")}
@@ -153,7 +153,7 @@ export function ProductBuyPanel({
             type="button"
             disabled
             className={[
-              "inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold",
+              "inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
               ghostCta,
             ].join(" ")}
@@ -167,7 +167,7 @@ export function ProductBuyPanel({
             target="_blank"
             rel="noreferrer"
             className={[
-              "inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white transition",
+              "inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white transition",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
               "bg-[#b40f1d] hover:bg-[#cc1323]",
             ].join(" ")}
@@ -180,7 +180,7 @@ export function ProductBuyPanel({
             type="button"
             disabled
             className={[
-              "inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold",
+              "inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
               ghostCta,
             ].join(" ")}

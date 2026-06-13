@@ -140,6 +140,7 @@
   html {
     @apply font-sans;
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
   body {
     @apply bg-background text-foreground;
@@ -148,6 +149,7 @@
       radial-gradient(circle at top right, rgba(180, 15, 29, 0.06), transparent 14%);
     letter-spacing: 0.01em;
     text-rendering: optimizeLegibility;
+    overflow-x: hidden;
   }
   ::selection {
     background: rgba(180, 15, 29, 0.85);

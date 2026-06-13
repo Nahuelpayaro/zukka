@@ -11,11 +11,11 @@ export function ZukkaNavbar() {
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-black/94 backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8">
-        <Link href="/" className="space-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black" id="top">
+        <Link href="/" className="min-w-0 space-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black" id="top">
           <span className="block text-2xl font-semibold tracking-[0.34em] text-white sm:text-[1.7rem]">
             ZUKKA
           </span>
-          <span className="block text-[0.62rem] uppercase tracking-[0.28em] text-white/56">Indumentaria importada</span>
+          <span className="block text-[0.62rem] uppercase tracking-[0.18em] text-white/56 sm:tracking-[0.28em]">Indumentaria importada</span>
         </Link>
 
         {/* Desktop nav */}
