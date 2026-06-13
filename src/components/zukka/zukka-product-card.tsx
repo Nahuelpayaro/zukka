@@ -49,10 +49,10 @@ export function ZukkaProductCard({ product, priority = false, position = 1 }: Zu
   const priceLabel = product.price > 0 ? formattedPrice : "Consultar precio";
 
   return (
-    <article className="group overflow-hidden rounded-[1.25rem] border border-white/10 bg-[#060606] transition hover:border-white/22 hover:bg-[#080808]">
+    <article className="group h-full overflow-hidden rounded-[1.25rem] border border-white/10 bg-[#060606] transition hover:border-white/22 hover:bg-[#080808]">
       <Link
         href={product.href}
-        className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b40f1d] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+        className="flex h-full flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b40f1d] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         aria-label={`Ver ${product.name}`}
         {...(isExternal ? { rel: "noreferrer", target: "_blank" } : {})}
       >
@@ -79,7 +79,8 @@ export function ZukkaProductCard({ product, priority = false, position = 1 }: Zu
           </div>
         </div>
 
-        <div className="space-y-4 border-t border-white/10 px-4 pb-5 pt-4 sm:px-5 sm:pb-5">
+        {/* flex column with the CTA pinned to the bottom keeps all cards visually equal */}
+        <div className="flex flex-1 flex-col gap-4 border-t border-white/10 px-4 pb-5 pt-4 sm:px-5 sm:pb-5">
           <div className="flex items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <span className={`rounded-full border px-3 py-1 text-[0.62rem] uppercase tracking-[0.18em] ${availabilityClassName}`}>
@@ -97,7 +98,8 @@ export function ZukkaProductCard({ product, priority = false, position = 1 }: Zu
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
             <div className="space-y-1.5">
               <p className="text-[0.76rem] leading-5 text-white/58">{product.attributes.brand ?? categoryLabel}</p>
-              <h3 className="text-lg font-medium leading-6 text-white">{product.name}</h3>
+              {/* min-h reserves 3 title lines so short names don't shrink the card */}
+              <h3 className="line-clamp-3 min-h-[4.5rem] text-lg font-medium leading-6 text-white">{product.name}</h3>
               {sizeLabel ? (
                 <p className="text-[0.68rem] uppercase tracking-[0.14em] text-white/42">{sizeLabel}</p>
               ) : null}
@@ -108,7 +110,7 @@ export function ZukkaProductCard({ product, priority = false, position = 1 }: Zu
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-4 rounded-full bg-white px-4 py-3 text-sm font-semibold text-black transition group-hover:bg-[#b40f1d] group-hover:text-white">
+          <div className="mt-auto flex items-center justify-between gap-4 rounded-full bg-white px-4 py-3 text-sm font-semibold text-black transition group-hover:bg-[#b40f1d] group-hover:text-white">
             <span>Ver producto</span>
             <span aria-hidden="true">→</span>
           </div>
