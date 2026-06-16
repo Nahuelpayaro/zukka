@@ -90,6 +90,14 @@ export function ProductBuyPanel({
     isTiendanubeId(productId) &&
     purchasableVariantId !== null;
 
+  // Tienda Nube's documented external add-to-cart is a top-level GET navigation to
+  // /comprar/?add_to_cart=... A cross-site POST drops the SameSite=Lax cart cookie and
+  // creates an orphan cart (empty cart for the user); a GET navigation keeps the session.
+  const buyHref =
+    canCheckout && cartEndpoint && purchasableVariantId
+      ? `${cartEndpoint}?add_to_cart=${encodeURIComponent(productId)}&variant=${encodeURIComponent(purchasableVariantId)}&quantity=1`
+      : null;
+
   const paymentCopy =
     config?.installmentsCount && config.installmentsCount > 0
       ? `Hasta ${config.installmentsCount} cuotas — pago en el checkout de Tienda Nube.`
@@ -163,19 +171,12 @@ export function ProductBuyPanel({
           <button type="button" disabled className={ghostCta}>
             Sin stock — consultá disponibilidad
           </button>
-        ) : canCheckout ? (
-          // Happy path — POST to the store cart endpoint; it creates the cart and
-          // redirects (302) to the signed Tienda Nube checkout. Same-tab navigation is
-          // the reliable mobile default (in-app webviews block _blank popups).
-          <form method="post" action={cartEndpoint ?? undefined} className="w-full">
-            <input type="hidden" name="add_to_cart" value={productId} />
-            <input type="hidden" name="variant" value={purchasableVariantId ?? ""} />
-            <input type="hidden" name="quantity" value="1" />
-            <input type="hidden" name="go_to_checkout" value="1" />
-            <button type="submit" className={primaryCta}>
-              Comprar
-            </button>
-          </form>
+        ) : buyHref ? (
+          // Happy path — GET navigation adds the item to the store cart with the session
+          // intact; the store shows the cart with the item, ready to check out.
+          <a href={buyHref} className={primaryCta}>
+            Comprar
+          </a>
         ) : storeFallbackUrl ? (
           // Degraded fallback — open the product page on the store so the user can still buy.
           <a href={storeFallbackUrl} target="_blank" rel="noreferrer" className={primaryCta}>
