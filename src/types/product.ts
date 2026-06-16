@@ -14,7 +14,6 @@ export type ProductVariant = {
   compareAtPrice?: number | null;
   stock?: number | null;
   available: boolean | null;
-  checkoutUrl?: string | null;
 };
 
 export type ProductAttributes = {
@@ -35,7 +34,6 @@ export type Product = {
   mood: string;
   href: string;
   externalUrl?: string | null;
-  checkoutUrl?: string | null;
   buyActionUrl?: string | null;
   image: ProductImage;
   images: ProductImage[];

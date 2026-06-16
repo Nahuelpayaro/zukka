@@ -269,15 +269,13 @@ function mapTiendanubeProduct(input: unknown, index: number): Product | null {
   const category = readCategory(product.categories?.[0]) ?? "Selección ZUKKA";
   const images = mapImages(product.images, name, category);
   const externalUrl = product.canonical_url ?? null;
-  const variants = mapVariants(product.variants, product.currency ?? "ARS", externalUrl);
+  const variants = mapVariants(product.variants, product.currency ?? "ARS");
   const attributes = inferProductAttributes(product, name, category, variants);
   const variant = product.variants?.[0];
   const price = variants[0]?.price ?? toNumber(variant?.promotional_price) ?? toNumber(variant?.price) ?? 0;
   const availability = resolveAvailability(product, variant, price);
-  // Product-level checkoutUrl: points to the first available variant's checkout
-  // URL (not a true product-level URL). Used as a fallback when the panel has
-  // no selected variant or when variants is empty.
-  const checkoutUrl = buildCheckoutUrl(externalUrl, variants.find((item) => item.available !== false)?.id ?? variants[0]?.id);
+  // Checkout is a server-side cart POST to /comprar/ (buyActionUrl); Tienda Nube
+  // signs the real checkout URL after the cart is created, so we cannot pre-build one.
   const buyActionUrl = buildBuyActionUrl(externalUrl);
   // Sum stock from raw variants BEFORE the price filter so zero-price draft
   // variants don't silently inflate or hide the real stock count.
@@ -294,7 +292,6 @@ function mapTiendanubeProduct(input: unknown, index: number): Product | null {
     mood: "Selección ZUKKA",
     href: `/producto/${encodeURIComponent(slug)}`,
     externalUrl,
-    checkoutUrl,
     buyActionUrl,
     image: images[0],
     images,
@@ -312,7 +309,7 @@ function mapImages(images: TiendanubeImage[] | null | undefined, name: string, c
   return mappedImages.length > 0 ? mappedImages : [createGeneratedImage(name, category, "#B40F1D")];
 }
 
-function mapVariants(variants: TiendanubeVariant[] | null | undefined, currency: string, productUrl: string | null = null): ProductVariant[] {
+function mapVariants(variants: TiendanubeVariant[] | null | undefined, currency: string): ProductVariant[] {
   return (variants ?? [])
     .map((variant, index) => {
       const regularPrice = toNumber(variant.price) ?? 0;
@@ -329,12 +326,11 @@ function mapVariants(variants: TiendanubeVariant[] | null | undefined, currency:
         compareAtPrice: regularPrice > price ? regularPrice : null,
         stock,
         available: typeof variant.available === "boolean" ? variant.available : stock === null ? null : stock > 0,
-        checkoutUrl: buildCheckoutUrl(productUrl, id),
       } satisfies ProductVariant;
     })
     // Drop zero-price placeholder variants (e.g. Tienda Nube draft rows with
     // no price set). If this removes ALL variants the panel falls back to the
-    // product-level CTA chain (productCheckoutUrl → buyActionUrl → externalUrl).
+    // store-level CTA (buyActionUrl → externalUrl).
     .filter((variant) => variant.price > 0);
 }
 
@@ -386,7 +382,6 @@ function createFallbackProduct({
     mood,
     href: `/producto/${id}`,
     externalUrl: null,
-    checkoutUrl: null,
     buyActionUrl: null,
     image: createGeneratedImage(name, category, accent),
     images: [createGeneratedImage(name, category, accent)],
@@ -674,19 +669,6 @@ function hasVariantOptions(values: TiendanubeVariant["values"]): boolean {
   return name !== null && isMeaningfulVariantLabel(name);
 }
 
-function buildCheckoutUrl(productUrl: string | null, variantId: string | undefined): string | null {
-  if (!productUrl || !variantId) {
-    return null;
-  }
-
-  try {
-    const url = new URL(productUrl);
-    return `${url.origin}/checkout/v3/start/${variantId}/`;
-  } catch {
-    return null;
-  }
-}
-
 function buildBuyActionUrl(productUrl: string | null): string | null {
   if (!productUrl) {
     return null;
@@ -694,6 +676,10 @@ function buildBuyActionUrl(productUrl: string | null): string | null {
 
   try {
     const url = new URL(productUrl);
+    // The form action must be https — the panel posts cart data to this origin.
+    if (url.protocol !== "https:") {
+      return null;
+    }
     return `${url.origin}/comprar/`;
   } catch {
     return null;

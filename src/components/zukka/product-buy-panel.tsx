@@ -9,7 +9,7 @@ import type { ProductVariant } from "@/types/product";
 const LOW_STOCK_MIN = 2;
 const LOW_STOCK_MAX = 5;
 
-// Guard: only allow https:// URLs as hrefs to avoid javascript: and other unsafe schemes.
+// Guard: only allow https:// URLs to avoid javascript: and other unsafe schemes.
 function safeHttpsUrl(url: string | null | undefined): string | null {
   if (url && /^https:\/\//.test(url)) {
     return url;
@@ -17,12 +17,24 @@ function safeHttpsUrl(url: string | null | undefined): string | null {
   return null;
 }
 
+// Tienda Nube ids are numeric. Synthetic fallback ids ("zukka-1", "variant-2")
+// must never reach the cart POST, or it would add a garbage item.
+function isTiendanubeId(value: string | null | undefined): value is string {
+  return typeof value === "string" && /^\d+$/.test(value);
+}
+
 type ProductBuyPanelProps = {
   variants: ProductVariant[];
   defaultVariantId: string;
-  productCheckoutUrl?: string | null;
-  /** Fallback store-level buy URL (e.g. /comprar/) when no variant checkout URL is available. */
+  /** Numeric Tienda Nube product id — posted as `add_to_cart`. */
+  productId: string;
+  /**
+   * Store-level cart endpoint (e.g. https://store.mitiendanube.com/comprar/).
+   * Tienda Nube builds the real checkout URL server-side after a cart is created,
+   * so we POST to this endpoint instead of linking to a pre-built checkout URL.
+   */
   buyActionUrl?: string | null;
+  /** Canonical product URL on the store — final fallback when no cart endpoint exists. */
   externalUrl?: string | null;
   config?: {
     installmentsCount?: number | null;
@@ -32,7 +44,7 @@ type ProductBuyPanelProps = {
 export function ProductBuyPanel({
   variants,
   defaultVariantId,
-  productCheckoutUrl,
+  productId,
   buyActionUrl,
   externalUrl,
   config,
@@ -51,15 +63,6 @@ export function ProductBuyPanel({
     ? (variants.find((v) => v.id === selectedId) ?? null)
     : null;
 
-  // Fallback chain: variant checkoutUrl → product-level checkoutUrl
-  // (first-available-variant URL) → store-level buyActionUrl → externalUrl.
-  const activeCheckoutUrl =
-    safeHttpsUrl(activeVariant?.checkoutUrl) ??
-    safeHttpsUrl(productCheckoutUrl) ??
-    safeHttpsUrl(buyActionUrl) ??
-    safeHttpsUrl(externalUrl) ??
-    null;
-
   const isUnselected = hasSelectableVariants && selectedId === null;
 
   const isOutOfStock =
@@ -74,6 +77,19 @@ export function ProductBuyPanel({
     activeVariant.stock >= LOW_STOCK_MIN &&
     activeVariant.stock <= LOW_STOCK_MAX;
 
+  // The cart endpoint POST creates the cart and redirects to the signed checkout.
+  // Both ids must be real numeric Tienda Nube ids before we let the form submit.
+  const cartEndpoint = safeHttpsUrl(buyActionUrl);
+  const storeFallbackUrl = safeHttpsUrl(externalUrl);
+  const purchasableVariantId =
+    activeVariant !== null && isTiendanubeId(activeVariant.id) ? activeVariant.id : null;
+  const canCheckout =
+    !isUnselected &&
+    !isOutOfStock &&
+    cartEndpoint !== null &&
+    isTiendanubeId(productId) &&
+    purchasableVariantId !== null;
+
   const paymentCopy =
     config?.installmentsCount && config.installmentsCount > 0
       ? `Hasta ${config.installmentsCount} cuotas — pago en el checkout de Tienda Nube.`
@@ -81,7 +97,10 @@ export function ProductBuyPanel({
 
   // Shared ghost style for disabled/no-URL states. Never red.
   const ghostCta =
-    "cursor-not-allowed border border-white/20 bg-transparent text-white/50";
+    "inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold cursor-not-allowed border border-white/20 bg-transparent text-white/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black";
+
+  const primaryCta =
+    "inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white transition bg-[#b40f1d] hover:bg-[#cc1323] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black";
 
   return (
     <div className="w-full min-w-0 space-y-4">
@@ -136,55 +155,35 @@ export function ProductBuyPanel({
       <div className="grid gap-3">
         {isUnselected ? (
           // No size selected yet — prompt user; not navigating.
-          <button
-            type="button"
-            disabled
-            className={[
-              "inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
-              ghostCta,
-            ].join(" ")}
-          >
+          <button type="button" disabled className={ghostCta}>
             Seleccioná un talle
           </button>
         ) : isOutOfStock ? (
           // Out of stock — native disabled button, correctly announced by AT.
-          <button
-            type="button"
-            disabled
-            className={[
-              "inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
-              ghostCta,
-            ].join(" ")}
-          >
+          <button type="button" disabled className={ghostCta}>
             Sin stock — consultá disponibilidad
           </button>
-        ) : activeCheckoutUrl ? (
-          // Happy path — valid https:// URL, render as <a>.
-          <a
-            href={activeCheckoutUrl}
-            target="_blank"
-            rel="noreferrer"
-            className={[
-              "inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white transition",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
-              "bg-[#b40f1d] hover:bg-[#cc1323]",
-            ].join(" ")}
-          >
-            Comprar
+        ) : canCheckout ? (
+          // Happy path — POST to the store cart endpoint; it creates the cart and
+          // redirects (302) to the signed Tienda Nube checkout. Same-tab navigation is
+          // the reliable mobile default (in-app webviews block _blank popups).
+          <form method="post" action={cartEndpoint ?? undefined} className="w-full">
+            <input type="hidden" name="add_to_cart" value={productId} />
+            <input type="hidden" name="variant" value={purchasableVariantId ?? ""} />
+            <input type="hidden" name="quantity" value="1" />
+            <input type="hidden" name="go_to_checkout" value="1" />
+            <button type="submit" className={primaryCta}>
+              Comprar
+            </button>
+          </form>
+        ) : storeFallbackUrl ? (
+          // Degraded fallback — open the product page on the store so the user can still buy.
+          <a href={storeFallbackUrl} target="_blank" rel="noreferrer" className={primaryCta}>
+            Ver en la tienda
           </a>
         ) : (
-          // No checkout URL available — disabled button, not an href-less anchor.
-          <button
-            type="button"
-            disabled
-            className={[
-              "inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
-              ghostCta,
-            ].join(" ")}
-          >
+          // Nothing to link to — disabled button, not an href-less anchor.
+          <button type="button" disabled className={ghostCta}>
             Comprar
           </button>
         )}
