@@ -67,7 +67,9 @@ export function ZukkaProductCard({ product, priority = false, position = 1 }: Zu
               placeholder="blur"
               blurDataURL={product.image.blurDataURL}
               priority={priority}
-              unoptimized
+              // Optimize real Tienda Nube images (resize + modern formats); the
+              // SVG fallback posters are data: URLs that can't be optimized.
+              unoptimized={!hasRealImage}
             />
             {!hasRealImage ? (
               <>
