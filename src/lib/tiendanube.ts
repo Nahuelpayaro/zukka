@@ -77,17 +77,26 @@ const FALLBACK_PRODUCTS: Product[] = [
 const DESTACADOS_CATEGORY_ID = "39313706";
 
 export async function getFeaturedProducts(limit = 3): Promise<Product[]> {
-  // Prefer the curated "Destacados" category; fall back to first N products.
-  const categoryProducts = await fetchTiendanubeProductsByCategory(DESTACADOS_CATEGORY_ID, limit);
+  // Prefer the curated "Destacados" category, keeping its products first.
+  const featured = await fetchTiendanubeProductsByCategory(DESTACADOS_CATEGORY_ID, limit);
 
-  if (categoryProducts.length > 0) {
-    return categoryProducts;
+  // The curated category may hold fewer than `limit` products, which leaves the
+  // home grid asymmetric. Top it up with the latest catalog products (deduped)
+  // so the section always fills to `limit` when the catalog allows it.
+  if (featured.length < limit) {
+    const fillers = await fetchTiendanubeProducts(limit * 3);
+    const seen = new Set(featured.map((product) => product.id));
+
+    for (const product of fillers) {
+      if (featured.length >= limit) break;
+      if (seen.has(product.id)) continue;
+      seen.add(product.id);
+      featured.push(product);
+    }
   }
 
-  const remoteProducts = await fetchTiendanubeProducts(limit);
-
-  if (remoteProducts.length > 0) {
-    return remoteProducts;
+  if (featured.length > 0) {
+    return featured.slice(0, limit);
   }
 
   return FALLBACK_PRODUCTS.slice(0, limit);
